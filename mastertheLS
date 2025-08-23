@@ -1,0 +1,1 @@
+ls -u --indicator-style=slash | paste -sd ','

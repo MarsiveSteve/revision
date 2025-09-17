@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Marsive GreenCut EA</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+  :root { --green:#2e7d32; --light:#f4f4f4; }
+    body { margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--light); color:#222; }
+    header { background:var(--green); color:#fff; padding:12px 20px; position:sticky; top:0; z-index:100; display:flex; justify-content:space-between; align-items:center; }
+    header h1 { margin:0; font-size:18px; display:flex; gap:.5rem; align-items:center; }
+    nav a { color:#fff; text-decoration:none; margin-left:12px; font-weight:600; }
+    .hero { background: linear-gradient(90deg,#43a047,#66bb6a); color:white; text-align:center; padding:50px 20px; }
+    section { padding:30px 20px; max-width:1100px; margin:0 auto; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
+    .card { background:#fff; border-radius:10px; padding:14px; box-shadow:0 2px 6px rgba(0,0,0,0.08); color:var(--green); font-weight:700; cursor:pointer; text-align:center; }
+    .card:hover { transform:scale(1.03); transition:transform .18s; }
+    /* Booking Form */
+    form { max-width:600px; margin:auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    input, select, button { width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:6px; }
+    button { background:#2e7d32; color:#fff; font-weight:bold; cursor:pointer; }
+    button:hover { opacity:0.9; }
+
+
+    /* Modal common */
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1200; align-items:center; justify-content:center; }
+    .modal.show { display:flex; }
+    .modal-content { background:#fff; width:360px; max-width:92%; padding:18px; border-radius:10px; box-shadow:0 6px 24px rgba(0,0,0,0.25); text-align:center; }
+    .modal-content h2 { margin-top:0; color:var(--green); }
+    .modal-content .actions { margin-top:12px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+    .small { font-size:13px; color:#666; }
+
+    /* County modal */
+    #countyModal .modal-content { max-width:420px; text-align:center; }
+    #regionList { max-height:160px; overflow:auto; width:260px; margin:8px auto; display:none; background:#fff; border:1px solid #ddd; border-radius:6px; }
+    .region-item { padding:8px 12px; cursor:pointer; }
+    .region-item:hover { background:#f1f8f1; }
+
+    footer { background:var(--green); color:#fff; padding:14px 20px; text-align:center; margin-top:28px; }
+    footer a { color:#fff; margin:0 8px; font-size:20px; text-decoration:none; }
+
+    /* small responsive tweaks */
+    @media (max-width:600px){ header { flex-direction:column; gap:8px; align-items:flex-start; } }
+    
+
+/* Timeline Container */
+.timeline {
+  position: relative;
+  max-width: 1000px;
+  margin: 50px auto;
+  padding: 20px 0;
+}
+
+.timeline-title {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 40px;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+/* NEW wrapper so the line starts after title */
+.timeline-items {
+  position: relative;
+  padding-top: 20px;
+}
+
+/* Vertical center line */
+.timeline-items::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 100%;
+  background: #2e7d32;
+  border-radius: 2px;
+}
+
+/* Timeline item */
+.timeline-item {
+  padding: 20px 40px;
+  position: relative;
+  width: 50%;
+}
+
+.timeline-item.left {
+  left: 0;
+  text-align: right;
+}
+
+.timeline-item.right {
+  left: 50%;
+  text-align: left;
+}
+
+/* Circle icons */
+.timeline-icon {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2e7d32;
+  color: #fff;
+  font-size: 18px;
+  padding: 12px;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* Content box */
+.timeline-content {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  position: relative;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+.timeline-content h3 {
+  margin-top: 0;
+  color: #2e7d32;
+}
+
+.timeline {
+  position: relative;
+  margin: 20px auto;
+  padding: 20px 0;
+  width: 90%;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  background: #2e7d32; /* green line */
+  transform: translateX(-50%);
+}
+
+.timeline-item {
+  position: relative;
+  width: 50%;
+  padding: 40px 20px 20px; /* top padding added for icon space */
+}
+
+.timeline-item.left {
+  left: 0;
+  text-align: right;
+}
+
+.timeline-item.right {
+  left: 50%;
+}
+
+.timeline-content {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  position: relative;
+  display: inline-block;
+  max-width: 90%;
+}
+
+/* ICONS above the box, aligned to center line */
+.timeline-icon {
+  position: absolute;
+  top: 0;                        /* stick at the top of the item */
+  left: 50%;                     /* center on the line */
+  transform: translate(-50%, -50%); /* pull it upward */
+  width: 40px;
+  height: 40px;
+  background: #2e7d32;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  z-index: 10;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  top: 60px; /* 👈 push the green line down (adjust as needed) */
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  background: #2e7d32; /* green line */
+  transform: translateX(-50%);
+}
+
+.section-title {
+  text-align: center;
+  font-size: 28px;
+  color: #2e7d32;
+  margin-bottom: 10px;
+}
+
+.title-divider {
+  width: 80%;
+  margin: 0 auto 40px auto;  /* centers & adds space below */
+  border: 0;
+  height: 3px;
+  background: #2e7d32;       /* same green as timeline */
+  border-radius: 2px;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  top: 0;        /* now the line can safely start at the top of timeline */
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  background: #2e7d32;
+  transform: translateX(-50%);
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  margin: 15px 0;
+  gap: 8px;
+  font-weight: bold;
+}
+
+#paymentDetails {
+  margin: 10px 0;
+}
+
+#paymentDetails input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Trees section */
+#trees { padding: 18px 0 36px; }
+
+/* image card */
+#trees .image-card {
+  margin: 18px auto;
+  width: 92%;
+  max-width: 620px;
+  height: 260px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  background: #e9efe9;
+}
+#trees .image-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* stats card */
+#trees .stats-card {
+  margin: 18px auto;
+  width: 92%;
+  max-width: 620px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#trees .stats-card h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 700;
+}
+#trees .stats-card p {
+  margin: 6px 0 0;
+  font-size: 34px;
+  font-weight: 800;
+  color: #2e7d32;
+}
+
+/* icon */
+#trees .stats-card .icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #1db954;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  box-shadow: 0 6px 12px rgba(29,185,84,0.18);
+}
+
+/* responsive */
+@media (max-width:600px){
+  #trees .image-card { height: 180px; }
+  #trees .stats-card p { font-size: 28px; }
+  #trees .stats-card { padding: 14px; }
+}
+
+/* === Goal 2026 section === */
+#goal-2026 { padding: 28px 0; max-width:1100px; margin: 0 auto; }
+
+#goal-2026 .goal-wrapper { text-align:center; }
+#goal-2026 .goal-header h2 {
+  margin: 0 0 6px;
+  color: var(--green, #2e7d32);
+  font-size: 24px;
+}
+#goal-2026 .goal-header .small { color:#666; margin:0; }
+
+#goal-2026 .goal-display {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  margin-top:14px;
+  margin-bottom:8px;
+}
+
+/* big number */
+#goal-2026 .goal-number #goal-count {
+  font-weight:900;
+  font-size:44px;
+  color: var(--green, #2e7d32);
+  line-height:1;
+  min-width:180px;
+  display:inline-block;
+}
+
+/* badge for 1M+ */
+#goal-2026 .goal-badge {
+  background: linear-gradient(180deg, #1db954, #138a2e);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:18px;
+  box-shadow:0 6px 18px rgba(20,120,40,0.18);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  visibility:hidden;        /* shown only when reached */
+  opacity:0;
+  transform:translateY(6px);
+  transition:all .4s cubic-bezier(.2,.9,.2,1);
+}
+
+/* visible badge */
+#goal-2026 .goal-badge.visible {
+  visibility:visible;
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* small note */
+#goal-2026 .goal-note { margin-top:8px; color:#666; font-size:13px; }
+
+/* responsive */
+@media (max-width:600px){
+  #goal-2026 .goal-number #goal-count { font-size:34px; min-width:130px; }
+  #goal-2026 .goal-badge { font-size:16px; padding:8px 12px; }
+}
+
+/* Progress bar container */
+.goal-progress {
+  width: 80%;
+  max-width: 420px;
+  height: 14px;
+  background: #e6e6e6;
+  border-radius: 999px;
+  margin: 12px auto 6px auto;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+}
+
+/* Animated progress bar */
+#goal-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #43a047, #2e7d32);
+  border-radius: inherit;
+  transition: width 0.5s ease-out;
+}
+
+/* Animated progress bar (dynamic color will be applied via JS) */
+#goal-progress-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  transition: width 0.5s ease-out, background 0.5s ease-out;
+}
+
+#goal-progress-bar-2026,
+#goal-progress-bar-2035 {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  transition: width 0.5s ease-out, background 0.5s ease-out;
+}
+
+</style>
+  
+</head>
+<body>
+
+  <header>
+    <h1 data-editable>🌿 Marsive GreenCut EA</h1>
+    <nav>
+      <a href="#counties">Counties</a>
+      <a href="#ea">East Africa</a>
+      <a href="#booking">Book</a>
+      <a href="#contact">Contact</a>
+      <a href="javascript:void(0)" onclick="showAdminLogin()">Admin</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <h2 data-editable>Professional Lawn Care & Tree Planting Across East Africa</h2>
+    <p class="medium" data-editable>Transforming outdoor spaces while contributing to environmental conservation.</p>
+  </div>
+
+  <!-- Counties -->
+  <section id="counties">
+    <h2>We Serve All 47 Counties in Kenya</h2>
+    <div style="text-align:center;margin:14px 0;">
+      <input id="searchBox" type="text" placeholder="Search county or country..." style="padding:10px;border-radius:6px;border:1px solid #ddd;width:260px;" oninput="filterRegions()">
+      <div id="regionList"></div>
+    </div>
+
+    <div id="countyGrid" class="grid"></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button id="prevPage">Previous</button>
+      <span id="pageInfo" style="margin:0 10px;"></span>
+      <button id="nextPage">Next</button>
+    </div>
+  </section>
+
+  <!-- East Africa -->
+  <section id="ea">
+    <h2>East Africa</h2>
+    <div id="eaGrid" class="grid"></div>
+  </section>
+
+  <!-- Booking -->
+  <section id="booking">
+    <h2>Book Our Services</h2>
+    <form id="bookingForm">
+      <input id="fullName" required placeholder="Full Name" />
+      <input id="email" type="email" required placeholder="Email" />
+      <input id="phone" required placeholder="Phone Number" />
+      <select id="serviceType" required>
+        <option value="">Select Service Type</option>
+        <option value="Lawn Care">Lawn Care</option>
+        <option value="Tree Planting">Tree Planting</option>
+        <option value="Hedge Trimming">Hedge Trimming</option>
+        ype</option>
+        <option value="Lawn & Tree Planting">Lawn & Tree Planting</option>
+        ype</option>
+        <option value="Lawn & Hedge Trimming">Lawn & Hedge Trimming</option>
+        ype</option>
+        <option value="Tree Planting & H/T">Tree Planting & H/T</option>
+        ype</option>
+        <option value="All">All</option>
+      
+      </select>
+      <select id="regionSelect" required>
+        <option value="">Select County / Country</option>
+      </select>
+      <input id="preferredDate" type="date" required />
+      <input id="preferredTime" type="time" required />
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button type="submit">Submit Booking</button>
+      </div>
+    </form>
+  </section>
+  
+  
+  <div align="center">
+    <h2>Choose Your Payment Method</h2>
+      <a href="payments.html">   Press here 👉  💳 </a>
+
+  <!-- County Info Modal -->
+  <div id="countyModal" class="modal">
+    <div class="modal-content">
+      <img id="regionIcon" alt="" style="width:72px;height:72px"/>
+      <h3 id="countyName"></h3>
+      <p id="countyInfo"></p>
+      <div class="actions"><button class="close-btn" onclick="closeModal()">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Admin Login Modal -->
+  <div id="adminLoginModal" class="modal">
+    <div class="modal-content">
+      <h2>Admin Login</h2>
+      <input id="adminUser" placeholder="Username" />
+      <input id="adminPass" type="password" placeholder="Password" />
+      <div class="actions">
+        <button onclick="adminLogin()">Login</button>
+        <button onclick="document.getElementById('adminLoginModal').classList.remove('show'); document.getElementById('adminLoginModal').style.display='none'">Cancel</button>
+      </div>
+      <p id="loginError" class="small" style="color:#b00020;"></p>
+      <p class="small">
+        <a href="javascript:void(0)" onclick="showCreateAccount()">Create New Admin</a> |
+        <a href="javascript:void(0)" onclick="showForgotPassword()">Forgot Password?</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Create Account Modal -->
+  <div id="createAccountModal" class="modal">
+    <div class="modal-content">
+      <h2>Create New Admin</h2>
+      <input id="newUser" placeholder="Username" />
+      <input id="newPass" type="password" placeholder="Password" />
+      <input id="confirmPass" type="password" placeholder="Confirm Password" />
+      <div class="actions">
+        <button onclick="createAccount()">Create</button>
+        <button onclick="closeCreateAccount()">Cancel</button>
+      </div>
+      <p id="createMsg" class="small"></p>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div id="forgotPassModal" class="modal">
+    <div class="modal-content">
+      <h2>Reset Password</h2>
+      <input id="resetUser" placeholder="Username" />
+      <input id="resetPass" type="password" placeholder="New Password" />
+      <input id="confirmResetPass" type="password" placeholder="Confirm New Password" />
+      <div class="actions">
+        <button onclick="resetPassword()">Reset</button>
+        <button onclick="closeForgotPassword()">Cancel</button>
+      </div>
+      <p id="resetMsg" class="small"></p>
+    </div>
+  </div>
+
+  <!-- Contact -->
+  <section id="contact">
+    <h2>Contact Us</h2>
+    <p><a href="tel:+254707899360"><i class="fas fa-phone"></i> Call</a> |
+       <a href="https://wa.me/254707899360" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a></p>
+    <p><a href="mailto:stephkymanih@gmail.com"><i class="fas fa-envelope"></i> Email</a></p>
+    
+  </section>
+
+<section class="milestones">
+  <h2 class="section-title">2024 Conservation Milestones</h2>
+  <hr class="title-divider">
+
+  <div class="timeline">
+    <div class="timeline-item left">
+      <div class="timeline-icon">🌱</div>
+      <div class="timeline-content">
+        <h3>January</h3>
+        <p>Transforming outdoor spaces while contributing to environmental conservation.</p>
+      </div>
+    </div>
+
+    <div class="timeline-item right">
+      <div class="timeline-icon">🌳</div>
+      <div class="timeline-content">
+        <h3>February</h3>
+        <p>Eco-friendly landscaping projects across multiple counties.</p>
+      </div>
+    </div>
+  </div>
+</section>
+   
+<!-- Trees Planted Section -->
+<section id="trees" aria-label="Trees planted">
+  <div class="image-card">
+    <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1600&q=80&fm=jpg&crop=entropy&cs=tinysrgb"
+         alt="Forest path">
+  </div>
+
+  <div class="stats-card">
+    <div>
+      <h3>Trees Planted</h3>
+      <!-- Start at 0 so animation runs -->
+      <p id="tree-count" data-target="15847">0</p>
+    </div>
+    <div class="icon"><i class="fa-solid fa-tree"></i></div>
+  </div>
+</section>
+
+<!-- Target 2026: 1M+ Section -->
+<section id="goal-2026" aria-label="Trees target for 2026">
+  <div class="goal-wrapper">
+    <div class="goal-header">
+      <h2>Target: Trees by 2026</h2>
+      <p class="small">Our goal for 2026 — rallying community planting & partnerships</p>
+    </div>
+
+    <div class="goal-display" role="status" aria-live="polite">
+      <div class="goal-number">
+        <span id="goal-count-2026" data-target="1000000" data-step="100000" data-start="0">0</span>
+      </div>
+      <div id="goal-badge-2026" class="goal-badge" aria-hidden="true">1M+</div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="goal-progress">
+      <div id="goal-progress-bar-2026"></div>
+    </div>
+    <p id="goal-progress-text-2026" class="small"></p>
+  </div>
+</section>
+
+
+<!-- 🌍 Target 2035: 20B Section -->
+<section id="goal-2035" aria-label="Trees target for 2035">
+  <div class="goal-wrapper">
+    <div class="goal-header">
+      <h2>Target: Trees by 2035</h2>
+      <p class="small">Long-term mission — restoring ecosystems with 20 billion trees worldwide</p>
+    </div>
+
+    <div class="goal-display" role="status" aria-live="polite">
+      <div class="goal-number">
+        <span id="goal-count-2035" data-target="20000000000" data-step="500000000" data-start="0">0</span>
+      </div>
+      <div id="goal-badge-2035" class="goal-badge" aria-hidden="true">20B+</div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="goal-progress">
+      <div id="goal-progress-bar-2035"></div>
+    </div>
+    <p id="goal-progress-text-2035" class="small"></p>
+  </div>
+</section><footer>
+  <p>🌿 Marsive GreenCut EA &copy; 2025</p>
+  <div class="social-links">
+    <a href="https://www.linkedin.com/in/" target="_blank"><i class="fab fa-linkedin"></i></a>
+    <a href="https://www.facebook.com/king.masive.5?mibextid=rS40aB7S9Ucbxw6v" target="_blank"><i class="fab fa-facebook"></i></a>
+    <a href="https://github.com/MarsiveSteve/revision" target="_blank"><i class="fab fa-github"></i></a>
+  </div>
+</footer>
+
+
+  <!-- load the script -->
+  <script src="js/main.js"></script>
+</body>
+</html>

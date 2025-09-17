@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Marsive GreenCut EA</title>
+  
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
+    h1 { color: #2e7d32; text-align: center; }
+    .controls { margin-bottom: 20px; text-align: center; }
+    button { 
+      margin: 5px; 
+      padding: 10px 15px; 
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      color: #fff; 
+      font-size: 14px;
+    }
+    button i { margin-right: 6px; }
+    button:hover { opacity: 0.9; }
+
+    /* Color-coded buttons */
+    .btn-refresh { background: #17a2b8; }
+    .btn-undo { background: #ffc107; color: #000; }
+    .btn-date { background: #6f42c1; }
+    .btn-county { background:#8e44ad; }
+    .btn-print { background: #007bff; }
+    .btn-csv { background: #28a745; }
+    .btn-excel { background: #20c997; }
+    .btn-pdf { background: #dc3545; }
+    .btn-share { background: #fd7e14; }
+    .btn-logout { background: #343a40; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+    th { background: #2e7d32; color: #fff; }
+  </style>
+</head>
+<body>
+  <h1>🌿 Admin Dashboard - Bookings</h1>
+
+  <div class="controls">
+    <button class="btn-refresh" onclick="refreshBookings()"><i class="fas fa-sync-alt"></i> Refresh</button>
+    <button class="btn-undo" onclick="undoDelete()"><i class="fas fa-undo"></i> Undo</button>
+    <button class="btn-date" onclick="sortByDate()" id="sortDateBtn">
+      <i class="fas fa-calendar"></i> Sort by Date <span id="dateArrow">🔼</span>
+    </button>
+    <button class="btn-county" onclick="sortByCounty()" id="sortCountyBtn">
+      <i class="fas fa-map-marker-alt"></i> Sort by County <span id="countyArrow">🔼</span>
+    </button>
+    <button class="btn-print" onclick="printBookings()"><i class="fas fa-print"></i> Print</button>
+    <button class="btn-csv" onclick="downloadCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+    <button class="btn-excel" onclick="downloadExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+    <button class="btn-pdf" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+    <button class="btn-share" onclick="shareBookings()"><i class="fas fa-share-alt"></i> Share</button>
+    <button class="btn-logout" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <table id="bookingsTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Service</th>
+        <th>Region</th>
+        
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

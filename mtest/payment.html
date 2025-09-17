@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Payments Demo — Sandbox (Airtel STK added)</title>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <style>:root {
+  --green: #2e7d32;
+  --blue: #007bff;
+  --radius: 8px;
+  --shadow: 0 2px 6px rgba(0,0,0,0.08);
+  --transition: all .3s ease;
+}
+
+/* Generic Buttons */
+button {
+  padding: .6rem .9rem;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 700;
+  transition: var(--transition);
+}
+button:hover { opacity: 0.9; }
+
+.primary   { background: var(--blue); }
+.secondary { background: #6c757d; }
+.danger    { background: #d9534f; }
+.success   { background: #28a745; }
+
+/* Collapsible/Hidden Section */
+.hidden-section {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all .45s ease;
+}
+.hidden-section.show {
+  max-height: 800px;
+  opacity: 1;
+  margin-top: 12px;
+  padding: 14px;
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px rgba(0,0,0,.06);
+}
+
+/* Payment Options */
+.payment-options {
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.payment-btn {
+  padding: .5rem .9rem;
+  border-radius: var(--radius);
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: var(--transition);
+}
+.payment-btn:hover { transform: scale(1.02); }
+
+.paypal { background: #003087; }
+.mpesa  { background: #1a7f37; }
+.airtel { background: #d6001c; }
+.cheque { background: #555; }
+
+.selected {
+  box-shadow: 0 0 12px rgba(0,0,0,.18);
+  border-color: #ffd54f;
+  transform: scale(1.02);
+}
+
+/* Payment Form */
+#paymentDetails label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 700;
+  color: #333;
+}
+#paymentDetails input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: var(--radius);
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.payment-actions {
+  display: flex;
+  gap: .6rem;
+  margin-top: 12px;
+}
+.meta {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.45);
+  z-index: 9999;
+}
+.modal.show { display: flex; }
+
+.modal-box {
+  background: #fff;
+  padding: 18px;
+  border-radius: 10px;
+  max-width: 520px;
+  width: 94%;
+  box-shadow: 0 8px 32px rgba(0,0,0,.16);
+  text-align: left;
+}
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid #ddd;
+  border-top-color: var(--blue);
+  animation: spin .9s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Receipt */
+.receipt {
+  background: #f8fff6;
+  border: 1px solid #dff0d8;
+  padding: 12px;
+  border-radius: var(--radius);
+  margin-top: 12px;
+  font-weight: 700;
+  color: var(--green);
+}
+   
+  </style>
+</head>
+<body>
+  <h2>Payments Demo — Sandbox (KES)</h2>
+        <a href="index.html" class="active">🏠 Home</a>
+  <div class="meta">Fake wallet balance: <span id="fakeBalance">—</span> (local demo only)</div>
+
+  <button id="showPaymentsBtn" class="primary">🔘 Payments</button>
+
+  <section id="paymentSection" class="hidden-section" aria-hidden="true">
+    <h3>Choose a Payment Method</h3>
+    <div class="payment-options" role="list">
+      <button class="payment-btn paypal" data-method="PayPal">PayPal</button>
+      <button class="payment-btn mpesa" data-method="Mpesa">M-Pesa</button>
+      <button class="payment-btn airtel" data-method="AirtelMoney">Airtel</button>
+      <button class="payment-btn cheque" data-method="Cheque">Cheque</button>
+    </div>
+
+    <div id="paymentDetails" aria-live="polite"></div>
+
+    <div class="payment-actions">
+      <button id="backBtn" class="secondary" type="button">⬅️ Back</button>
+      <button id="resetPaymentsBtn" class="danger" type="button">🔄 Reset</button>
+      <button id="finishBtn" class="success" type="button">✅ Finish</button>
+    </div>
+
+    <div id="receiptArea"></div>
+  </section>
+
+  <!-- modal for processing / STK simulation -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-box" id="modalBox"></div>
+  </div>
+
+<script>
+/* -------------------------
+  Demo payment simulator with Airtel STK
+  - min amount: 1200 KES
+  - fake wallet in localStorage key 'demo_balance' (default 10000)
+  - saves selected method && details in localStorage
+---------------------------*/
+
+const MIN_AMOUNT = 1200;
+const DEFAULT_BALANCE = 10000;
+
+const showBtn = document.getElementById('showPaymentsBtn');
+const section = document.getElementById('paymentSection');
+const paymentBtns = document.querySelectorAll('.payment-btn');
+const details = document.getElementById('paymentDetails');
+const backBtn = document.getElementById('backBtn');
+const resetBtn = document.getElementById('resetPaymentsBtn');
+const finishBtn = document.getElementById('finishBtn');
+const receiptArea = document.getElementById('receiptArea');
+const modal = document.getElementById('modal');
+const modalBox = document.getElementById('modalBox');
+const balanceEl = document.getElementById('fakeBalance');
+
+let selectedMethod = localStorage.getItem('selectedPayment') || null;
+let selectedDetails = localStorage.getItem('paymentDetails') || null;
+let fakeBalance = parseInt(localStorage.getItem('demo_balance') || DEFAULT_BALANCE, 10);
+
+/* show current fake balance */
+function drawBalance(){ balanceEl.textContent = `KES ${fakeBalance.toLocaleString()}`; }
+drawBalance();
+
+/* toggle section */
+showBtn.addEventListener('click', () => {
+  const open = section.classList.toggle('show');
+  section.setAttribute('aria-hidden', String(!open));
+  showBtn.textContent = open ? '❌ Close Payments' : '🔘 Payments';
+  if(open && selectedMethod) {
+    highlight(selectedMethod);
+    renderDetails(selectedMethod, selectedDetails);
+  }
+});
+
+/* back */
+backBtn.addEventListener('click', () => {
+  section.classList.remove('show');
+  section.setAttribute('aria-hidden','true');
+  showBtn.textContent = '🔘 Payments';
+});
+
+/* reset */
+resetBtn.addEventListener('click', () => {
+  if (!confirm('Clear saved payment details?')) return;
+  localStorage.removeItem('selectedPayment');
+  localStorage.removeItem('paymentDetails');
+  localStorage.removeItem('paymentAmount');
+  selectedMethod = null;
+  selectedDetails = null;
+  details.innerHTML = '';
+  receiptArea.innerHTML = '';
+  paymentBtns.forEach(b => b.classList.remove('selected'));
+  alert('✅ Reset complete (demo only).');
+});
+
+/* click payment method (buttons only) */
+paymentBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedMethod = btn.dataset.method;
+    localStorage.setItem('selectedPayment', selectedMethod);
+    highlight(selectedMethod);
+    renderDetails(selectedMethod, selectedDetails);
+  });
+});
+
+/* highlight chosen */
+function highlight(method){
+  paymentBtns.forEach(b => b.classList.toggle('selected', b.dataset.method === method));
+}
+
+/* render dynamic inputs — includes Amount (KES) field */
+function renderDetails(method, rememberedValue = '') {
+  selectedDetails = rememberedValue || selectedDetails || '';
+  // include Amount input (min 1200)
+  let html = `
+    <label>Amount (KES) — minimum ${MIN_AMOUNT}:
+      <input id="amountField" type="number" min="${MIN_AMOUNT}" value="${selectedDetailsAmount() || MIN_AMOUNT}" />
+    </label>
+  `;
+
+  if(method === 'PayPal'){
+    html += `
+      <label>PayPal Email:
+        <input id="detailField" type="email" placeholder="you@example.com" value="${selectedDetailsEmail() || ''}" />
+      </label>
+    `;
+  } else if(method === 'Mpesa'){
+    html += `
+      <label>M-Pesa Phone (format +2547...):
+        <input id="detailField" type="tel" placeholder="+2547XXXXXXXX" value="${selectedDetails || ''}" />
+      </label>
+    `;
+  } else if(method === 'AirtelMoney'){
+    html += `
+      <label>Airtel Phone (format +2547...):
+        <input id="detailField" type="tel" placeholder="+2547XXXXXXXX" value="${selectedDetails || ''}" />
+      </label>
+    `;
+  } else if(method === 'Cheque'){
+    html += `
+      <label>Cheque Number:
+        <input id="detailField" type="text" placeholder="Enter cheque number" value="${selectedDetails || ''}" />
+      </label>
+    `;
+  }
+
+  // Option to top-up fake wallet
+  html += `
+    <div style="margin-top:10px; font-size:0.95rem; color:#444;">
+      <button id="topupBtn" style="background:#ff9800; color:#fff; padding:6px 10px; border-radius:6px; border:none; cursor:pointer;">⬆️ Top up KES 5,000 (demo)</button>
+      <span style="margin-left:10px; color:#666;">or use existing balance: <strong>KES ${fakeBalance.toLocaleString()}</strong></span>
+    </div>
+  `;
+
+  details.innerHTML = html;
+
+  // wire inputs
+  const detailField = document.getElementById('detailField');
+  const amountField = document.getElementById('amountField');
+  const topupBtn = document.getElementById('topupBtn');
+
+  // restore previously saved details into fields
+  if (detailField && selectedDetails) detailField.value = selectedDetails;
+  if (amountField && localStorage.getItem('paymentAmount')) amountField.value = localStorage.getItem('paymentAmount');
+
+  // save on input
+  if(detailField) detailField.addEventListener('input', e => {
+    selectedDetails = e.target.value;
+    localStorage.setItem('paymentDetails', selectedDetails);
+  });
+  if(amountField) amountField.addEventListener('input', e => {
+    localStorage.setItem('paymentAmount', e.target.value);
+  });
+
+  // top-up demo wallet
+  topupBtn.addEventListener('click', () => {
+    fakeBalance += 5000;
+    localStorage.setItem('demo_balance', fakeBalance);
+    drawBalance();
+    alert('✅ Demo wallet topped up by KES 5,000');
+  });
+}
+
+/* helpers to parse previously-saved composite details */
+function selectedDetailsAmount() {
+  const a = localStorage.getItem('paymentAmount');
+  return a ? a : '';
+}
+function selectedDetailsEmail() {
+  return localStorage.getItem('paymentDetails') || '';
+}
+
+/* finish -> simulated payment flow with Airtel & Mpesa STK */
+finishBtn.addEventListener('click', async () => {
+  if(!selectedMethod) { alert('⚠️ Choose a payment method first'); return; }
+
+  const amountField = document.getElementById('amountField');
+  const detailField = document.getElementById('detailField');
+  const amount = amountField ? Number(amountField.value) : 0;
+  const detailVal = detailField ? detailField.value.trim() : '';
+
+  if(!amount || amount < MIN_AMOUNT) { alert(`⚠️ Amount must be at least KES ${MIN_AMOUNT}`); return; }
+  if(!detailVal) { alert('⚠️ Please enter the required payment details'); return; }
+
+  // save details
+  selectedDetails = detailVal;
+  localStorage.setItem('paymentDetails', selectedDetails);
+  localStorage.setItem('paymentAmount', String(amount));
+
+  // confirm basic
+  if(!confirm(`Confirm payment method: ${selectedMethod}\nAmount: KES ${amount.toLocaleString()}\nProceed?`)) {
+    alert('❌ Payment cancelled.');
+    return;
+  }
+
+  // If M-Pesa -> STK-style modal
+  if(selectedMethod === 'Mpesa') {
+    showModal(`
+      <div style="font-weight:800; margin-bottom:8px;"><span class="spinner"></span>Sending STK Push to ${selectedDetails}...</div>
+      <div style="font-size:14px;color:#444;margin-bottom:8px;">(Demo) A fake push has been sent. Enter received code to confirm.</div>
+      <label>Enter mock code: <input id="stkCode" style="width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #ccc"/></label>
+      <div style="text-align:right;margin-top:10px;">
+        <button id="cancelStk" style="margin-right:8px;background:#6c757d;color:#fff;padding:8px 10px;border-radius:6px;border:none;">Cancel</button>
+        <button id="confirmStk" style="background:#28a745;color:#fff;padding:8px 10px;border-radius:6px;border:none;">Confirm</button>
+      </div>
+    `);
+
+    document.getElementById('cancelStk').addEventListener('click', () => { hideModal(); alert('❌ STK cancelled (demo).'); });
+    document.getElementById('confirmStk').addEventListener('click', () => {
+      const code = document.getElementById('stkCode').value.trim();
+      if(!code) { alert('Enter the mock code to confirm'); return; }
+      hideModal();
+      processPayment(amount);
+    });
+    return;
+  }
+
+  // If Airtel -> STK-style modal (same flow)
+  if(selectedMethod === 'AirtelMoney') {
+    showModal(`
+      <div style="font-weight:800; margin-bottom:8px;"><span class="spinner"></span>Sending Airtel STK to ${selectedDetails}...</div>
+      <div style="font-size:14px;color:#444;margin-bottom:8px;">(Demo) A fake Airtel STK has been initiated. Enter the code you 'received' to confirm.</div>
+      <label>Enter mock code: <input id="airtelCode" style="width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #ccc"/></label>
+      <div style="text-align:right;margin-top:10px;">
+        <button id="cancelAirtel" style="margin-right:8px;background:#6c757d;color:#fff;padding:8px 10px;border-radius:6px;border:none;">Cancel</button>
+        <button id="confirmAirtel" style="background:#28a745;color:#fff;padding:8px 10px;border-radius:6px;border:none;">Confirm</button>
+      </div>
+    `);
+
+    document.getElementById('cancelAirtel').addEventListener('click', () => { hideModal(); alert('❌ Airtel STK cancelled (demo).'); });
+    document.getElementById('confirmAirtel').addEventListener('click', () => {
+      const code = document.getElementById('airtelCode').value.trim();
+      if(!code) { alert('Enter the mock code to confirm'); return; }
+      hideModal();
+      processPayment(amount);
+    });
+    return;
+  }
+
+  // Other methods -> simulated processing spinner then complete
+  showModal(`<div style="font-weight:800"><span class="spinner"></span>Processing payment...</div><div style="margin-top:8px;color:#555">This is a simulated payment (demo only).</div>`);
+  setTimeout(()=>{ hideModal(); processPayment(amount); }, 1200 + Math.random()*1500);
+});
+
+/* processPayment: checks fake balance, deducts and shows receipt */
+function processPayment(amount) {
+  // check balance
+  if(fakeBalance < amount) {
+    const top = confirm(`Insufficient demo balance (KES ${fakeBalance.toLocaleString()}). Top up KES 5,000?`);
+    if(top) {
+      fakeBalance += 5000; localStorage.setItem('demo_balance', fakeBalance); drawBalance();
+      // continue automatically
+    } else {
+      alert('❌ Payment not completed (insufficient demo funds).');
+      return;
+    }
+  }
+
+  // deduct
+  fakeBalance -= amount;
+  localStorage.setItem('demo_balance', fakeBalance); drawBalance();
+
+  // fake transaction id + receipt
+  const txId = 'TX' + Date.now().toString(36).toUpperCase().slice(-10);
+  const time = new Date().toLocaleString();
+  const recipient = selectedDetails || '-';
+  const receiptHTML = `
+    <div class="receipt">
+      ✅ <strong>Payment Completed (Demo)</strong><br>
+      Method: ${selectedMethod}<br>
+      Amount: KES ${amount.toLocaleString()}<br>
+      Recipient: ${recipient}<br>
+      Transaction ID: <code>${txId}</code><br>
+      Time: ${time}
+    </div>
+  `;
+  receiptArea.innerHTML = receiptHTML;
+
+  // clear stored selection (simulate single-use)
+  localStorage.removeItem('selectedPayment');
+  localStorage.removeItem('paymentDetails');
+  localStorage.removeItem('paymentAmount');
+  selectedMethod = null;
+  selectedDetails = null;
+
+  paymentBtns.forEach(b => b.classList.remove('selected'));
+  details.innerHTML = '';
+  alert('✅ Demo payment successful — receipt shown.');
+}
+
+/* modal helpers */
+function showModal(html) {
+  modalBox.innerHTML = html;
+  modal.classList.add('show');
+}
+function hideModal(){ modal.classList.remove('show'); modalBox.innerHTML = ''; }
+
+/* init on load */
+window.addEventListener('DOMContentLoaded', () => {
+  drawBalance();
+  if(localStorage.getItem('selectedPayment')) {
+    selectedMethod = localStorage.getItem('selectedPayment');
+    selectedDetails = localStorage.getItem('paymentDetails') || '';
+    highlight(selectedMethod);
+    // details will restore when user opens the section
+  }
+});
+</script>
+</body>
+</html>
+

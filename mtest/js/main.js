@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('bookings', JSON.stringify(bookings));
     alert('✅ Booking submitted successfully!');
     bookingForm.reset();
-    // if admin is logged in and viewing admin.html, admin.js will handle update there
+    // if admin is logged in and viewing prondle update there
   });
 
   // initial render
@@ -429,33 +429,36 @@ function updateProgress(val) {
 
 // Generic animated counter with dynamic progress
 function initGoalCounter(id, target, step) {
-  const el = document.getElementById(`goal-count-${id}`);
-  const badge = document.getElementById(`goal-badge-${id}`);
-  const bar = document.getElementById(`goal-progress-bar-${id}`);
-  const progressText = document.getElementById(`goal-progress-text-${id}`);
-  if (!el) return;
+    const el = document.getElementById(`goal-count-${id}`);
+    const badge = document.getElementById(`goal-badge-${id}`);
+    const bar = document.getElementById(`goal-progress-bar-${id}`);
+    const progressText = document.getElementById(`goal-progress-text-${id}`);
+    if (!el) return;
 
-  let current = parseInt(el.getAttribute('data-start') || "0", 10);
-  el.textContent = current.toLocaleString();
+    let current = parseInt(el.getAttribute('data-start') || "0", 10);
+    el.textContent = current.toLocaleString();
 
-  // Compact badge (e.g., 20B+)
-  const compact = new Intl.NumberFormat('en', {
-    notation: 'compact',
-    compactDisplay: 'short'
-  }).format(target) + "+";
-  badge.textContent = compact;
+    // Compact badge (e.g., 20B+)
+    const compact = new Intl.NumberFormat('en', {
+        notation: 'compact',
+        compactDisplay: 'short'
+    }).format(target) + "+";
+    badge.textContent = compact;
 
-  function updateProgress(val) {
-    const percent = Math.min((val / target) * 100, 100);
-    bar.style.width = percent + "%";
-    progressText.textContent = Math.floor(percent) + "% towards goal";
+    function updateProgress(val) {
+        const percent = Math.min((val / target) * 100, 100);
+        bar.style.width = percent + "%";
+        progressText.textContent = Math.floor(percent) + "% towards goal";
 
-    // dynamic color
-    if (percent < 30) {
-      bar.style.background = "linear-gradient(90deg, #d32f2f, #f44336)"; // red
-      progressText.style.color = "#d32f2f";
-    } else if (percent < 70) {
-      bar.style.background = "linear-gradient(90deg, #fbc02d, #fdd835)"; // yellow
-      progressText.style.color = "#fbc02d";
-    } else {
-      bar.style.background = "linear-gra
+        // dynamic color
+        if (percent < 30) {
+            bar.style.background = "linear-gradient(90deg, #d32f2f, #f44336)"; // red
+            progressText.style.color = "#d32f2f";
+        } else if (percent < 70) {
+            bar.style.background = "linear-gradient(90deg, #fbc02d, #fdd835)"; // yellow
+            progressText.style.color = "#fbc02d";
+        } else {
+            bar.style.background = "linear-gradient(90deg, #66bb6a, #43a047, #2e7d32)"; // green
+        }
+    } // Missing closing brace for updateProgress()
+} // Missing closing brace for initGoalCounter()
